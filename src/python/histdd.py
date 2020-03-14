@@ -38,7 +38,7 @@ def histogramdd(sample,bins,device=None):
         # bins is an integer
         bins = D*[bins]
     k = searchsorted(bins,sample)
-    multiindex = (bins.size(1)+1)**torch.arange((D),device=device)
+    multiindex = (bins.size(1)+1)**(torch.arange(D,0,-1,device=device)-1)
     l = torch.sum(k.transpose(0,1)*multiindex,1)
     """
     m,index = l.sort()
