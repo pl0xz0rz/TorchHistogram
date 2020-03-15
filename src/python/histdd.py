@@ -23,23 +23,34 @@ hist[0,1:]=hist[0,1:]-hist[0,:-1]
 hist = hist.reshape(6,6,6)
 """
 
-def histogramdd(sample,bins,device=None):
+def histogramdd(sample,bins=10,device=None,weights=None,ranges=None):
     D = sample.size(0)
-    if bins == None:
-        bins = 10
-    
     try:
         M = bins.size(0)
         if M != D:
             raise ValueError(
                 'The dimension of bins must be equal to the dimension of the '
                 ' sample x.')
-    except TypeError:
+    except AttributeError:
         # bins is an integer
-        bins = D*[bins]
-    k = searchsorted(bins,sample)
-    multiindex = (bins.size(1)+1)**(torch.arange(D,0,-1,device=device)-1)
-    l = torch.sum(k.transpose(0,1)*multiindex,1)
+        bins = torch.full([D],bins,dtype=int,device=device)
+    if bins.dim() == 2:
+        k = searchsorted(bins,sample)
+        multiindex = (bins.size(1)+1)**(torch.arange(D,0,-1,device=device)-1)
+        l = torch.sum(k*multiindex.reshape(-1,1),0)
+        hist = torch.bincount(l,minlength=(bins.size(1)+1)**bins.size(0),weights=weights)
+        hist = hist.reshape(tuple(torch.full([D],bins.size(1)+1,dtype=int,device=device)))
+    else:
+        if ranges == None:
+            ranges = torch.cat((torch.min(sample,1)[0],torch.max(sample,1)[0])).reshape((2,-1))
+        tranges = torch.empty_like(ranges)
+        tranges[0,:] = -ranges[0,:]
+        tranges[1,:] = bins/(ranges[1,:]+tranges[0,:])
+        multiindex = torch.flip(torch.cumprod(torch.flip(bins,[0])+1,-1)/(bins[-1]+1),[0]).long()
+        k = torch.addcmul(tranges[0,:].reshape(-1,1),sample,tranges[1,:].reshape(-1,1)).long()
+        l = torch.sum(k*multiindex.reshape(-1,1),0)
+        hist = torch.bincount(l,minlength=(multiindex[0]*(bins[-1]+1)).item(),weights=weights)
+        hist = hist.reshape(tuple(bins+1))
     """
     m,index = l.sort()
     r = torch.arange((bins.size(1)+1)**bins.size(0),device=device)
@@ -47,6 +58,5 @@ def histogramdd(sample,bins,device=None):
     hist[0,1:]=hist[0,1:]-hist[0,:-1]
     hist = hist.reshape(tuple(torch.full([bins.size(0)],bins.size(1)+1,dtype=int,device=device)))
     """
-    hist = torch.bincount(l,minlength=(bins.size(1)+1)**bins.size(0))
-    hist = hist.reshape(tuple(torch.full([D],bins.size(1)+1,dtype=int,device=device)))
+
     return hist
