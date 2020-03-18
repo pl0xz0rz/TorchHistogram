@@ -20,7 +20,7 @@ def histogramdd(sample,bins=None,edges=None,device=None,weights=None,ranges=None
             except AttributeError:
                 bins = torch.empty(D)
                 for i in range(len(edges)):
-                    bins[i] = edges[i].size(0)
+                    bins[i] = edges[i].size(0)-1
                 bins = bins.to(device)
             custom_edges = True
     try:
@@ -36,16 +36,23 @@ def histogramdd(sample,bins=None,edges=None,device=None,weights=None,ranges=None
         else:
             custom_edges = True
             edges = bins
-            bins = torch.empty(D)
+            bins = torch.empty(D,dtype=torch.long)
             for i in range(len(edges)):
-                bins[i] = edges[i].size(0)
+                bins[i] = edges[i].size(0)-1
             bins = bins.to(device)
     if bins.dim() == 2:
         custom_edges = True
         edges = bins
         bins = torch.full([D],bins.size(1)-1,dtype=torch.long,device=device)
     if custom_edges:
-        
+        if not torch.is_tensor(edges):
+            m = max(i.size(0) for i in edges)
+            tmp = torch.empty([D,m])
+            for i in range(D):
+                s = edges[i].size(0)
+                tmp[i,:]=edges[i][-1]
+                tmp[i,:s]=edges[i][:]
+            edges = tmp.to(device)
         k = searchsorted(edges,sample)
     else:
         if ranges == None:
@@ -59,9 +66,11 @@ def histogramdd(sample,bins=None,edges=None,device=None,weights=None,ranges=None
         k = torch.max(k,torch.tensor(0,device=device)) #Underflow bin
         
     k = torch.min(k,(bins+1).reshape(-1,1))   
-    multiindex = torch.flip(torch.cumprod(torch.flip(bins,[0])+2,-1)/(bins[-1]+2),[0]).long()
+    multiindex = torch.ones_like(bins)
+    multiindex[1:] = torch.cumprod(torch.flip(bins[1:],[0])+2,-1).long()
+    multiindex = torch.flip(multiindex,[0])
     l = torch.sum(k*multiindex.reshape(-1,1),0)
-    hist = torch.bincount(l,minlength=(multiindex[0]*(bins[-1]+2)).item(),weights=weights)
+    hist = torch.bincount(l,minlength=(multiindex[0]*(bins[0]+2)).item(),weights=weights)
     hist = hist.reshape(tuple(bins+2))
     torch.cuda.synchronize()
     """

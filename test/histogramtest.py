@@ -15,7 +15,7 @@ histnp = np.histogramdd(sample.transpose(0,1))[0]
 hist = histogramdd(sample)
 print(hist[1:-1,1:-1,1:-1]-histnp)
 
-sample = torch.rand(3,10000)
+sample = torch.rand(3,100000)
 histnp = np.histogramdd(sample.transpose(0,1),6)[0]
 hist = histogramdd(sample,6)
 print(hist[1:-1,1:-1,1:-1]-histnp)

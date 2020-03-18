@@ -25,7 +25,7 @@ def get_arrays(n,d=3):
 
 def get_tensors_edges(n,d=3,device=None):
     x = torch.rand((d,n),device=device)
-    v = torch.arange(0,1,.1,device=device)*torch.ones(d,device=device).reshape(-1,1)
+    v = [torch.arange(0,1,.1,device=device)]*d
     torch.cuda.synchronize()
     return x,v
 
