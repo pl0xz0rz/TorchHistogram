@@ -74,7 +74,6 @@ def histogramdd(sample,bins=None,edges=None,weights=None,ranges=None,device=None
     l = torch.sum(k*multiindex.reshape(-1,1),0)
     hist = torch.bincount(l,minlength=(multiindex[0]*(bins[0]+2)).item(),weights=weights)
     hist = hist.reshape(tuple(bins+2))
-    torch.cuda.synchronize()
     """
     m,index = l.sort()
     r = torch.arange((bins.size(1)+1)**bins.size(0),device=device)

@@ -34,6 +34,11 @@ def get_arrays_edges(n,d=3):
     v = [np.arange(0,1.1,.1)]*d
     return x,v
 
+def histogramdd_synchronized(sample,bins=None,device=None):
+    hist = histogramdd(sample,bins,device=device)
+    torch.cuda.synchronize()
+    return hist
+
 n = 100
 time_cpu = torch.empty((4,6))
 time_cuda = torch.empty((4,6))
@@ -55,7 +60,7 @@ for j in range(6):
         time_cpu[i-3,j] = min(t)
         print("CPU: ",min(t),sep='\t')
         t = timeit.repeat(
-                stmt="histogramdd(sample,device='cuda')",
+                stmt="histogramdd_synchronized(sample,device='cuda')",
                 setup="sample = get_tensors(n,i,device='cuda')",
                 globals=globals(),
                 repeat=20,
@@ -82,7 +87,7 @@ for j in range(6):
         time_cpu_e[i-3,j] = min(t)
         print("CPU: ",min(t),sep='\t')
         t = timeit.repeat(
-                stmt="histogramdd(sample,bins,device='cuda')",
+                stmt="histogramdd_synchronized(sample,bins,device='cuda')",
                 setup="sample,bins = get_tensors_edges(n,i,device='cuda')",
                 globals=globals(),
                 repeat=20,
