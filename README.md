@@ -10,7 +10,9 @@ the output also includes the overflow bins.
 
 ##Installation
 
-This is a placeholder
+```
+pip install .
+```
 
 ##Usage
 
