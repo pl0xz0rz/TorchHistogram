@@ -7,7 +7,7 @@ hsgh
 import torch
 from torchsearchsorted import searchsorted
 
-def histogramdd(sample,bins=None,edges=None,device=None,weights=None,ranges=None):
+def histogramdd(sample,bins=None,edges=None,weights=None,ranges=None,device=None):
     custom_edges = False
     D = sample.size(0)
     if bins == None:
@@ -33,13 +33,15 @@ def histogramdd(sample,bins=None,edges=None,device=None,weights=None,ranges=None
         # bins is either an integer or a list
         if type(bins) == int:
             bins = torch.full([D],bins,dtype=torch.long,device=device)
-        else:
+        elif torch.is_tensor(bins[0]):
             custom_edges = True
             edges = bins
             bins = torch.empty(D,dtype=torch.long)
             for i in range(len(edges)):
                 bins[i] = edges[i].size(0)-1
             bins = bins.to(device)
+        else:
+            bins = torch.as_tensor(bins)
     if bins.dim() == 2:
         custom_edges = True
         edges = bins
