@@ -7,6 +7,7 @@ Created on Fri Mar 13 14:45:57 2020
 
 import numpy as np
 import torch
+from torchhistogramdd import histogramdd
 
 torch.random.manual_seed(19680801)
 

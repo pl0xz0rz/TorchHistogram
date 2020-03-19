@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import timeit
 from matplotlib import pyplot as plt
+from torchhistogramdd import histogramdd
 
 torch.random.manual_seed(19680801)
 torch.cuda.manual_seed_all(19680801)
