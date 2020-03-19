@@ -62,8 +62,8 @@ def histogramdd(sample,bins=None,edges=None,weights=None,ranges=None,device=None
             ranges[0,:]=torch.min(sample,1)[0]
             ranges[1,:]=torch.max(sample,1)[0]
         tranges = torch.empty_like(ranges)
-        tranges[0,:] = 1-ranges[0,:]
         tranges[1,:] = bins/(ranges[1,:]-ranges[0,:])
+        tranges[0,:] = 1-ranges[0,:]*tranges[1,:]
         k = torch.addcmul(tranges[0,:].reshape(-1,1),sample,tranges[1,:].reshape(-1,1)).long() #Get the right index
         k = torch.max(k,torch.tensor(0,device=device)) #Underflow bin
         
