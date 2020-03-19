@@ -7,9 +7,11 @@ hsgh
 import torch
 from torchsearchsorted import searchsorted
 
-def histogramdd(sample,bins=None,edges=None,weights=None,ranges=None,device=None):
+def histogramdd(sample,bins=None,ranges=None,weights=None,edges=None,device=None):
     custom_edges = False
     D = sample.size(0)
+    if device == None:
+        device = sample.device
     if bins == None:
         if edges == None:
             bins = 10
